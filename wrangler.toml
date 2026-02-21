@@ -5,6 +5,3 @@ compatibility_date = "2025-03-28"
 pages_build_output_dir = "./build/client"
 send_metrics = false
 
-[[kv_namespaces]]
-binding = "INVITE_KV"
-id = "7a543e1a09eb4871a9901e6a2adaf087"
