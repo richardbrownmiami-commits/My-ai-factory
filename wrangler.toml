@@ -1,7 +1,10 @@
 #:schema node_modules/wrangler/config-schema.json
-name = "bolt"
+name = "bolt-oman"
 compatibility_flags = ["nodejs_compat"]
-compatibility_date = "2025-03-28"
+compatibility_date = "2024-11-12"
 pages_build_output_dir = "./build/client"
 send_metrics = false
 
+[vars]
+# This is your default starting code
+VITE_INVITE_CODE = "oman_2026"
