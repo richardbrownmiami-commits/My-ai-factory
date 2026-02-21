@@ -4,11 +4,8 @@ import { redirect, type ActionFunctionArgs } from "@remix-run/cloudflare";
 export const action = async ({ request, context }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const enteredCode = formData.get("inviteCode") as string;
-  
   const env = (context.cloudflare as any).env;
 
-  // This will check any variable you add in the Cloudflare dashboard
-  // Name them CODE_1, CODE_2, etc.
   const allCodes = Object.keys(env)
     .filter((key) => key.startsWith("CODE_") || key === "VITE_INVITE_CODE")
     .map((key) => env[key]);
