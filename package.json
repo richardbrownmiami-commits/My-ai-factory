@@ -3,7 +3,7 @@
   "description": "An AI Agent",
   "private": true,
   "license": "MIT",
-  "sideEffects": false,
+  "sideEffects": true,
   "type": "module",
   "version": "1.0.0",
   "author": {
