@@ -1,0 +1,82 @@
+name: Deploy Cloudflare Worker
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: false
+        default: 'production'
+
+concurrency:
+  group: deploy-worker-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy-worker:
+    name: Deploy Worker to Cloudflare
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if deployment secrets are configured
+        id: check-secrets
+        run: |
+          if [[ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" && -n "${{ secrets.CLOUDFLARE_ACCOUNT_ID }}" ]]; then
+            echo "configured=true" >> $GITHUB_OUTPUT
+            echo "✅ Cloudflare secrets found — proceeding with deployment"
+          else
+            echo "configured=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Cloudflare secrets not configured — skipping deployment"
+          fi
+
+      - name: Checkout repository
+        if: steps.check-secrets.outputs.configured == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        if: steps.check-secrets.outputs.configured == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        if: steps.check-secrets.outputs.configured == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        if: steps.check-secrets.outputs.configured == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        if: steps.check-secrets.outputs.configured == 'true'
+        run: pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: Deploy Worker via Wrangler
+        if: steps.check-secrets.outputs.configured == 'true'
+        run: pnpm wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deployment skipped
+        if: steps.check-secrets.outputs.configured == 'false'
+        run: |
+          echo "ℹ️ Worker deployment skipped — secrets not configured"
+          echo ""
+          echo "To enable auto-deploy, add these secrets in GitHub repo settings:"
+          echo "  → Settings > Secrets and variables > Actions > New repository secret"
+          echo ""
+          echo "  CLOUDFLARE_API_TOKEN  — from Cloudflare Dashboard > My Profile > API Tokens"
+          echo "  CLOUDFLARE_ACCOUNT_ID — from Cloudflare Dashboard > right sidebar"
